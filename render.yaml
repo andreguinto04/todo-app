@@ -2,8 +2,8 @@ services:
   postgres:
     image: postgres:13
     environment:
-      POSTGRES_DB: tododb
-      POSTGRES_USER: localhost
-      POSTGRES_PASSWORD: 1Andr30404!
+      POSTGRES_DB: tododb_bb4z
+      POSTGRES_USER: tododb_bb4z_user
+      POSTGRES_PASSWORD: hHcd6gdeJ0JBgrZl6KwXvECa6WNgnOsQ
     ports:
       - "5432:5432"

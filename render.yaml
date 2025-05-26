@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: todoapp
+    env: java
+    buildCommand: ./mvnw clean install
+    startCommand: java -jar target/todoapp-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://bxrqbj2dfbvgorttyxpm-mysql.services.clever-cloud.com:3306/bxrqbj2dfbvgorttyxpm
+      - key: SPRING_DATASOURCE_USERNAME
+        value: uwiq1wtodh5ydjt3
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: AQPJGsAjr3aLmsw5OTy6
+    build:
+      javaVersion: 17

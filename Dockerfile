@@ -1,11 +1,8 @@
-# Use Java 17 base image
-FROM openjdk:17-jdk-slim
+FROM maven:3.8.5-openjdk-17 AS build
+COPY .  .
+RUN mvn clean package -DskipTests
 
-# Copy the built JAR from the target directory
-COPY target/*.jar app.jar
-
-# Expose the port your app uses (optional, e.g., 8080)
+FROM openjdk:17.0.1-jdk-slim
+COPY --from=build /target/todoapp-0.0.1-SNAPSHOT.jar todoapp.jar
 EXPOSE 8080
-
-# Run the app
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "todoapp.jar"]

@@ -80,12 +80,11 @@
 </div>
 
 <script>
-    const API_URL = 'https://todo-app-i7id.onrender.com//api/todos';
-    const LOGIN_URL = 'https://todo-app-i7id.onrender.com//auth/login';
+    const API_URL = 'https://todo-app-i7id.onrender.com/api/todos';
+    const LOGIN_URL = 'https://todo-app-i7id.onrender.com/auth/login';
 
     let token = localStorage.getItem("token");
 
-    // If already logged in, load todos
     if (token) {
         document.getElementById("loginSection").style.display = "none";
         document.getElementById("todoSection").style.display = "block";
@@ -96,14 +95,23 @@
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value.trim();
 
-        if (!username || !password) return alert("Enter both username and password");
+        if (!username || !password) {
+            alert("Enter both username and password");
+            return;
+        }
 
         fetch(LOGIN_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })
         })
-            .then(res => res.json())
+            .then(async res => {
+                if (!res.ok) {
+                    const msg = await res.text();
+                    throw new Error(msg || "Login failed");
+                }
+                return res.json();
+            })
             .then(data => {
                 if (data.token) {
                     token = data.token;
@@ -112,8 +120,12 @@
                     document.getElementById("todoSection").style.display = "block";
                     loadTodos();
                 } else {
-                    alert("Login failed");
+                    alert("Login failed: Token not received");
                 }
+            })
+            .catch(err => {
+                console.error("Login error:", err);
+                alert(`Login failed: ${err.message}`);
             });
     }
 
@@ -123,7 +135,13 @@
                 'Authorization': `Bearer ${token}`
             }
         })
-            .then(res => res.json())
+            .then(async res => {
+                if (!res.ok) {
+                    const msg = await res.text();
+                    throw new Error(msg || "Failed to load todos");
+                }
+                return res.json();
+            })
             .then(todos => {
                 const list = document.getElementById('todoList');
                 list.innerHTML = '';
@@ -156,6 +174,10 @@
 
                     list.appendChild(li);
                 });
+            })
+            .catch(err => {
+                console.error("Failed to load todos:", err);
+                alert(`Error loading todos: ${err.message}`);
             });
     }
 
@@ -163,7 +185,10 @@
         const input = document.getElementById('todoInput');
         const title = input.value.trim();
 
-        if (!title) return alert("Task cannot be empty.");
+        if (!title) {
+            alert("Task cannot be empty.");
+            return;
+        }
 
         fetch(API_URL, {
             method: 'POST',
@@ -173,9 +198,14 @@
             },
             body: JSON.stringify({ title, completed: false })
         })
-            .then(() => {
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to add todo");
                 input.value = '';
                 loadTodos();
+            })
+            .catch(err => {
+                console.error("Add todo failed:", err);
+                alert(`Failed to add task: ${err.message}`);
             });
     }
 
@@ -187,7 +217,15 @@
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ title, completed })
-        }).then(loadTodos);
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to update todo");
+                loadTodos();
+            })
+            .catch(err => {
+                console.error("Toggle failed:", err);
+                alert(`Failed to update task: ${err.message}`);
+            });
     }
 
     function deleteTodo(id) {
@@ -196,7 +234,15 @@
             headers: {
                 'Authorization': `Bearer ${token}`
             }
-        }).then(loadTodos);
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to delete todo");
+                loadTodos();
+            })
+            .catch(err => {
+                console.error("Delete failed:", err);
+                alert(`Failed to delete task: ${err.message}`);
+            });
     }
 </script>
 </body>

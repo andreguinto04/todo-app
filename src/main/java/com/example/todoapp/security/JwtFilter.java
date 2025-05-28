@@ -21,6 +21,14 @@ public class JwtFilter implements Filter {
             throws IOException, ServletException {
 
         HttpServletRequest req = (HttpServletRequest) request;
+        String path = req.getRequestURI();
+
+        // Skip JWT check for login and register endpoints
+        if (path.startsWith("/auth/login") || path.startsWith("/auth/register")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = req.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

@@ -2,6 +2,7 @@ package com.example.todoapp.controller;
 
 import com.example.todoapp.model.Todo;
 import com.example.todoapp.repository.TodoRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/todos")
 @CrossOrigin(origins = "*")  // allow all origins for simplicity
+@PreAuthorize("isAuthenticated()")
 public class TodoController {
 
     private final TodoRepository todoRepository;

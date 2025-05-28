@@ -23,15 +23,17 @@
             max-width: 600px;
             margin: 40px auto;
         }
-        input[type="text"] {
+        input[type="text"], input[type="password"] {
             width: 70%;
             padding: 8px;
             font-size: 16px;
+            margin-bottom: 10px;
         }
         button {
             padding: 8px 12px;
             font-size: 16px;
             margin-left: 5px;
+            margin-bottom: 10px;
         }
         ul {
             list-style-type: none;
@@ -61,44 +63,87 @@
         <p>Made by Andre Guinto</p>
     </div>
 </div>
-<input type="text" id="todoInput" placeholder="Enter a new task..." />
-<button onclick="addTodo()">Add</button>
 
-<ul id="todoList"></ul>
+<!-- Login Section -->
+<div id="loginSection">
+    <h3>Login</h3>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+</div>
+
+<!-- Todo Section -->
+<div id="todoSection" style="display:none;">
+    <input type="text" id="todoInput" placeholder="Enter a new task..." />
+    <button onclick="addTodo()">Add</button>
+    <ul id="todoList"></ul>
+</div>
 
 <script>
-    const API_URL = '/api/todos';
+    const API_URL = 'https://todo-app-i7id.onrender.com//api/todos';
+    const LOGIN_URL = 'https://todo-app-i7id.onrender.com//auth/login';
 
-    // Load tasks on page load
-    window.onload = loadTodos;
+    let token = localStorage.getItem("token");
+
+    // If already logged in, load todos
+    if (token) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("todoSection").style.display = "block";
+        loadTodos();
+    }
+
+    function login() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        if (!username || !password) return alert("Enter both username and password");
+
+        fetch(LOGIN_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem("token", token);
+                    document.getElementById("loginSection").style.display = "none";
+                    document.getElementById("todoSection").style.display = "block";
+                    loadTodos();
+                } else {
+                    alert("Login failed");
+                }
+            });
+    }
 
     function loadTodos() {
-        fetch(API_URL)
+        fetch(API_URL, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
             .then(res => res.json())
             .then(todos => {
                 const list = document.getElementById('todoList');
-                list.innerHTML = ''; // Clear current list
+                list.innerHTML = '';
 
                 todos.forEach(todo => {
                     const li = document.createElement('li');
 
-                    // Task title
                     const span = document.createElement('span');
                     span.className = 'task-title' + (todo.completed ? ' completed' : '');
                     span.textContent = todo.title;
 
-                    // Complete checkbox
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.checked = todo.completed;
                     checkbox.onchange = () => toggleComplete(todo.id, todo.title, !todo.completed);
 
-                    // Delete button
                     const deleteBtn = document.createElement('button');
                     deleteBtn.textContent = 'Delete';
                     deleteBtn.onclick = () => deleteTodo(todo.id);
 
-                    // Left side (checkbox + title)
                     const leftDiv = document.createElement('div');
                     leftDiv.style.display = 'flex';
                     leftDiv.style.gap = '10px';
@@ -106,7 +151,6 @@
                     leftDiv.appendChild(checkbox);
                     leftDiv.appendChild(span);
 
-                    // Append to list item
                     li.appendChild(leftDiv);
                     li.appendChild(deleteBtn);
 
@@ -123,7 +167,10 @@
 
         fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ title, completed: false })
         })
             .then(() => {
@@ -135,14 +182,20 @@
     function toggleComplete(id, title, completed) {
         fetch(`${API_URL}/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ title, completed })
         }).then(loadTodos);
     }
 
     function deleteTodo(id) {
         fetch(`${API_URL}/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         }).then(loadTodos);
     }
 </script>
